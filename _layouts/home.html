@@ -1,0 +1,20 @@
+---
+layout: default
+---
+
+<header>
+    <h1>{{ site.title }}</h1>
+    <p class="subtitle">{{ site.description }}</p>
+</header>
+
+<main>
+    <section class="articles">
+        {% for post in site.posts %}
+        <article class="article-preview">
+            <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+            <p class="date">{{ post.date | date: "%B %d, %Y" }}</p>
+            <p class="excerpt">{{ post.excerpt | strip_html | truncatewords: 30 }}</p>
+        </article>
+        {% endfor %}
+    </section>
+</main>

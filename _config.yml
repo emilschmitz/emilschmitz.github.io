@@ -1,0 +1,19 @@
+title: Emil Schmitz
+description: Research notes and hobby projects
+author: Emil Schmitz
+url: "https://emilschmitz.github.io"
+baseurl: ""
+
+# Build settings
+markdown: kramdown
+permalink: /articles/:title/
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
