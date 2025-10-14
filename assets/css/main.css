@@ -33,6 +33,21 @@ h1 {
     color: #666;
 }
 
+.main-nav {
+    margin-top: 16px;
+}
+
+.main-nav a {
+    color: #0066cc;
+    text-decoration: none;
+    margin-right: 16px;
+    font-size: 15px;
+}
+
+.main-nav a:hover {
+    text-decoration: underline;
+}
+
 h2 {
     font-size: 24px;
     font-weight: 600;
