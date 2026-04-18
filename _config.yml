@@ -1,0 +1,38 @@
+# Site settings
+title: Emil Schmitz
+description: Research and Engineering
+author: Emil Schmitz
+email: emilalexanderschmitz@gmail.com
+url: "https://emilschmitz.github.io"
+baseurl: ""
+
+# Social links
+twitter_username: 
+github_username: emilschmitz
+linkedin_username: emil-schmitz-1ba787a4
+
+# Pixyll settings
+animated: true
+show_social_icons: true
+show_sharing_icons: false
+show_post_footers: true
+show_related_posts: false
+
+# Build settings
+markdown: kramdown
+permalink: /articles/:title/
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .sass-cache
+  - .jekyll-cache
+  - .jekyll-metadata
+  - .bundle
+  - .git
