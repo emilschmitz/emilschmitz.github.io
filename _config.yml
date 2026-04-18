@@ -7,7 +7,6 @@ baseurl:     ""
 url:         "https://emilschmitz.github.io"
 date_format: "%b %-d, %Y"
 header_pages:
- - cv.md
 
 # Google services
 google_verification:
