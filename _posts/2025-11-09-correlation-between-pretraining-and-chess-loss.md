@@ -16,7 +16,7 @@ Report from the [Apart AI Forecasting Hackathon](https://apartresearch.com/sprin
 
 Epoch AI's Direct Approach treats lower average training loss as a proxy for broader intellectual capability. We stress-test that claim on chess: measure **assistant-only bits-per-byte (BPB)** on post-cutoff prose, then **cross-entropy to Leela Chess Zero** on a fixed grandmaster game, and bridge chess scores to **human Elo bands** via played-move NLL under the same Leela policy.
 
-On 13 instruct models (Tinker), text BPB and chess CE correlate strongly once two gpt-oss chat/reasoning outliers are excluded (Pearson \(r \approx 0.84\) on the core 11). Absolute chess CE remains high (~3.9–7.7 nats). Model top-1 Leela NLL sits above Deep Blue's played-move NLL on the same game (~2.62) and above strong Lichess bands (~2.33 for 2600+).
+On 13 instruct models (Tinker), text BPB and chess CE correlate strongly once two gpt-oss chat/reasoning outliers are excluded (Pearson r ≈ 0.84 on the core 11). Absolute chess CE remains high (~3.9–7.7 nats). Model top-1 Leela NLL sits above Deep Blue's played-move NLL on the same game (~2.62) and above strong Lichess bands (~2.33 for 2600+).
 
 **Keywords**: Direct Method, Chess, LLM, Leela Chess Zero
 
@@ -26,7 +26,7 @@ On 13 instruct models (Tinker), text BPB and chess CE correlate strongly once tw
 
 Does lower general text loss imply better performance on a narrow, underrepresented domain? Epoch's Direct Approach argues that sufficiently low training loss implies the model can reproduce human-written work across intellectual tasks. That assumes balanced coverage. Chess notation is sparse relative to web prose: a model can look strong on average text while remaining weak at predicting expert moves.
 
-We measure both sides under one protocol: (1) text loss as assistant-only BPB on recent documents, (2) chess loss as \(H(\pi_{\text{Leela}} \| \pi_{\text{LLM}})\) on Deep Blue–Kasparov 1997 Game 6 (White), (3) a human/engine ladder of \(-\log \pi_{\text{Leela}}(m_{\text{played}})\) by Elo band.
+We measure both sides under one protocol: (1) text loss as assistant-only BPB on recent documents, (2) chess loss as H(π_Leela ‖ π_LLM) on Deep Blue–Kasparov 1997 Game 6 (White), (3) a human/engine ladder of −log π_Leela(m_played) by Elo band.
 
 ---
 
@@ -49,16 +49,16 @@ Qwen3.5-4B, Qwen3-8B, Qwen3.5-9B, GPT-OSS-20B, Qwen3.6-27B, Nemotron-3-Nano, Qwe
 - **Reference:** Leela Chess Zero BT3, `nodes=1` (policy head), CUDA on an A100.
 - **Game:** Deep Blue vs Kasparov, 1997 Game 6 — **White only**, 19 positions (`eval_data/pgn/deep_blue_kasparov_1997_g6.pgn`).
 - **LLM move probs:** full-string SAN with leading space (e.g. `" Nf3"`); product of token conditionals; renormalize over legal moves.
-- **Primary metric:** \(H(\pi_{\text{Leela}} \| \pi_{\text{LLM}})\).
-- **Bridge metric:** top-1 Leela NLL \(-\log \pi_{\text{Leela}}(\arg\max \pi_{\text{LLM}})\).
+- **Primary metric:** H(π_Leela ‖ π_LLM).
+- **Bridge metric:** top-1 Leela NLL −log π_Leela(arg max π_LLM).
 
 ### Human / engine calibration
 
-Same Leela policy. For humans (and Deep Blue), score the **played** move: \(-\log \pi_{\text{Leela}}(m_{\text{played}})\), aggregated by Elo band from PGN headers (Lichess sample) plus Deep Blue as an engine anchor on G6.
+Same Leela policy. For humans (and Deep Blue), score the **played** move: −log π_Leela(m_played), aggregated by Elo band from PGN headers (Lichess sample) plus Deep Blue as an engine anchor on G6.
 
 ### Cost
 
-Tinker estimate for this suite: ~$0.11 text + ~$0.65 chess ≈ **$0.76** (cap $50).
+Tinker estimate for this suite: about $0.11 text + $0.65 chess ≈ **$0.76** (cap $50).
 
 ---
 
@@ -86,7 +86,7 @@ gpt-oss-20b / 120b show pathological text BPB (~1.28 / ~2.57) under this chat pr
 
 ![Text BPB vs chess CE](/assets/chess-check-20260710/text_bpb_vs_chess_ce.png)
 
-**Core 11 (excl. gpt-oss):** Pearson \(r(\text{BPB}, \text{CE}) \approx 0.84\); Spearman \(\approx 0.74\). Linear fit: \(\text{CE} \approx -5.94 + 16.99 \cdot \text{BPB}\). All 13: \(r \approx 0.10\) (outliers dominate).
+**Core 11 (excl. gpt-oss):** Pearson r(BPB, CE) ≈ 0.84; Spearman ≈ 0.74. Linear fit: CE ≈ −5.94 + 16.99 · BPB. All 13: r ≈ 0.10 (outliers dominate).
 
 Best chess CE: DeepSeek-V3.1 (3.876). Lowest text BPB: Kimi-K2.6 (0.584). Lowest top-1 Leela NLL: Qwen3.5-397B (3.483).
 
@@ -100,7 +100,7 @@ Best chess CE: DeepSeek-V3.1 (3.876). Lowest text BPB: Kimi-K2.6 (0.584). Lowest
 | 2200–2600 | 2.412 | 423 |
 | 2600+ | 2.332 | 476 |
 
-Mid bands are small-\(N\) and noisy. Strong humans (~2.33) and Deep Blue on this game (~2.62) sit well below every model's top-1 Leela NLL (~3.5–4.6). Empirical CE→top-1 fit on core models: \(\text{top1} \approx 3.69 + 0.113 \cdot \text{CE}\) (shallow; top-1 is a coarse bridge).
+Mid bands are small-N and noisy. Strong humans (~2.33) and Deep Blue on this game (~2.62) sit well below every model's top-1 Leela NLL (~3.5–4.6). Empirical CE→top-1 fit on core models: top1 ≈ 3.69 + 0.113 · CE (shallow; top-1 is a coarse bridge).
 
 ![CE vs top-1 NLL with anchors](/assets/chess-check-20260710/ce_vs_top1_nll.png)
 
