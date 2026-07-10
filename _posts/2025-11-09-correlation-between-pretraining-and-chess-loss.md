@@ -2,179 +2,127 @@
 layout: post
 title: "Correlation Between Pretraining and Chess Loss"
 date: 2025-11-09
-excerpt: "Investigating whether an LLM's general training loss serves as a reliable predictor of its performance on specific, narrow tasks like chess."
+excerpt: "Stress-testing Epoch's Direct Approach: does lower text loss track chess move prediction vs Leela, and where do models sit on a human Elo ladder?"
 ---
-This is a report of some experiments that I began as part of the [Apart AI Forecasting Hackathon](https://apartresearch.com/sprints/the-ai-forecasting-hackathon-2025-10-31-to-2025-11-02). It is still work in progress. Code is available at [https://github.com/emilschmitz/chess-check](https://github.com/emilschmitz/chess-check).
+Report from the [Apart AI Forecasting Hackathon](https://apartresearch.com/sprints/the-ai-forecasting-hackathon-2025-10-31-to-2025-11-02), updated with a July 2026 Tinker + Leela suite. Code: [emilschmitz/chess-check](https://github.com/emilschmitz/chess-check). Run id `20260710T231834Z`.
 
 # AI Forecasting Hackathon
 
-## Report Template
-
-**Emil Schmitz**
-Independent
-
-**With**
-Apart Research
+**Emil Schmitz** · Independent · with Apart Research
 
 ---
 
 ## Abstract
 
-Epoch AI's direct method assumes that lower average loss indicates better general capabilities. We posit that the loss may possibly be indicative only of higher performance on specific content. We attempt to prove this by calculating loss on high-level chess games. To calculate loss, we compare the LLM's prediction to those of open-source chess engine Leela Chess Zero.
+Epoch AI's Direct Approach treats lower average training loss as a proxy for broader intellectual capability. We stress-test that claim on chess: measure **assistant-only bits-per-byte (BPB)** on post-cutoff prose, then **cross-entropy to Leela Chess Zero** on a fixed grandmaster game, and bridge chess scores to **human Elo bands** via played-move NLL under the same Leela policy.
 
-At the time of submission, the experiments are not yet finished.
+On 13 instruct models (Tinker), text BPB and chess CE correlate strongly once two gpt-oss chat/reasoning outliers are excluded (Pearson \(r \approx 0.84\) on the core 11). Absolute chess CE remains high (~3.9–7.7 nats). Model top-1 Leela NLL sits above Deep Blue's played-move NLL on the same game (~2.62) and above strong Lichess bands (~2.33 for 2600+).
 
-**Keywords**: Direct Method, Chess, LLM
+**Keywords**: Direct Method, Chess, LLM, Leela Chess Zero
 
 ---
 
 ## Introduction
 
-This project investigates whether an LLM's general training loss serves as a reliable predictor of its performance on specific, narrow tasks. We test this by evaluating how well language models predict chess moves in algebraic notation, comparing their probability distributions against those from Leela Chess Zero, a superhuman chess engine.
+Does lower general text loss imply better performance on a narrow, underrepresented domain? Epoch's Direct Approach argues that sufficiently low training loss implies the model can reproduce human-written work across intellectual tasks. That assumes balanced coverage. Chess notation is sparse relative to web prose: a model can look strong on average text while remaining weak at predicting expert moves.
 
-The motivation stems from Epoch AI's "Direct Approach" paper, which argues that training loss correlates with an AI system's ability to replicate human performance across all intellectual tasks. If training loss becomes sufficiently low, the theory suggests the model could reproduce any human-written work and thus handle any intellectual task humans can perform. However, this assumes balanced representation across all task types in the training data. In reality, datasets may contain abundant examples of common content (like blog posts or news articles) but sparse representation of specialized domains like notation of professional-level chess games. A model could achieve low overall loss by perfectly replicating frequent content types while remaining weak on rare, difficult tasks. However, a truly general-purpose AI should be able to predict moves in grandmaster-level games with good accuracy, indicating high chess ability.
-
-We hypothesize that LLMs with lower general training losses will also show lower cross-entropy loss when predicting chess moves compared to Leela Zero's distributions, but that loss on chess will not scale proportionally with general loss. By testing this hypothesis, we examine whether training loss truly generalizes as a capability proxy or whether it masks significant performance gaps in underrepresented domains. Chess serves as an ideal test case: it's well-defined, measurable, has verifiable expert-level performance standards, and existing research shows LLMs struggle at chess without specific training.
+We measure both sides under one protocol: (1) text loss as assistant-only BPB on recent documents, (2) chess loss as \(H(\pi_{\text{Leela}} \| \pi_{\text{LLM}})\) on Deep Blue–Kasparov 1997 Game 6 (White), (3) a human/engine ladder of \(-\log \pi_{\text{Leela}}(m_{\text{played}})\) by Elo band.
 
 ---
 
 ## Methods
 
-### 2.1 Models Evaluated
+### Models
 
-#### Misc Models
+Instruct / chat checkpoints only (no base models), scored via [Tinker](https://thinkingmachines.ai/):
 
-- GPT-2 (124M parameters) - baseline small model
-- GPT-Neo 1.3B - mid-size open model
-- Pythia 1.0B, 1.4B, 2.8B - suite with fully documented training trajectories
+Qwen3.5-4B, Qwen3-8B, Qwen3.5-9B, GPT-OSS-20B, Qwen3.6-27B, Nemotron-3-Nano, Qwen3.6-35B-A3B, GPT-OSS-120B, Nemotron-3-Super, Qwen3.5-397B, Nemotron-3-Ultra, DeepSeek-V3.1, Kimi-K2.6.
 
-#### OLMo 2 Models (Final Checkpoints)
+### Text loss (BPB)
 
-- OLMo 2 1B (1.0B parameters) - trained on 4T tokens (stage1) + 50B tokens (stage2)
-- OLMo 2 7B (7.0B parameters) - trained on 4T tokens (stage1) + 50B tokens (stage2, model averaged)
-- OLMo 2 13B (13.0B parameters) - trained on 5T tokens (stage1) + 400B tokens (stage2, model averaged)
-- OLMo 2 32B (32.0B parameters) - trained on 6T tokens (stage1) + 400B tokens (stage2, model averaged)
+- **Corpus:** 10 July-2026 documents (~58 KB total), diverse genres (news, wiki-style, job ad, etc.). Manifest under `eval_data/documents/`.
+- **Protocol:** native chat template; user message is a short “write an article titled …” prompt (**title only — no document leak**); assistant content is the full document; score **assistant tokens only**.
+- **Metric:** bits per byte (cross-tokenizer comparable), plus nats/token.
 
-#### OLMo 2 Models (Intermediate Checkpoints at ~50% Training)
+### Chess reference and scoring
 
-- OLMo 2 1B-mid - checkpoint at 2.0T/4.0T tokens (stage1 only)
-- OLMo 2 7B-mid - checkpoint at 2.0T/4.0T tokens (stage1 only)
-- OLMo 2 13B-mid - checkpoint at 2.5T/5.0T tokens (stage1 only)
-- OLMo 2 32B-mid - checkpoint at 3.0T/6.0T tokens (stage1 only)
+- **Reference:** Leela Chess Zero BT3, `nodes=1` (policy head), CUDA on an A100.
+- **Game:** Deep Blue vs Kasparov, 1997 Game 6 — **White only**, 19 positions (`eval_data/pgn/deep_blue_kasparov_1997_g6.pgn`).
+- **LLM move probs:** full-string SAN with leading space (e.g. `" Nf3"`); product of token conditionals; renormalize over legal moves.
+- **Primary metric:** \(H(\pi_{\text{Leela}} \| \pi_{\text{LLM}})\).
+- **Bridge metric:** top-1 Leela NLL \(-\log \pi_{\text{Leela}}(\arg\max \pi_{\text{LLM}})\).
 
-Model training losses sourced from original papers, model cards, and WandB training logs (see References section for details).
+### Human / engine calibration
 
-### 2.2 Chess Ground Truth
+Same Leela policy. For humans (and Deep Blue), score the **played** move: \(-\log \pi_{\text{Leela}}(m_{\text{played}})\), aggregated by Elo band from PGN headers (Lichess sample) plus Deep Blue as an engine anchor on G6.
 
-- Leela Chess Zero (lc0) as superhuman reference
-- Rationale: Open source, superhuman strength (3500+ Elo), provides move probability distributions via policy head
+### Cost
 
-### 2.3 Dataset
-
-- Source: Lichess Elite Database / FICS Games Database
-- Number of games: 100
-- Game quality: Grandmaster level (Elo > 2500)
-
-### 2.4 Procedure
-
-1. Load chess games in PGN format
-2. For each position in each game:
-   - Convert position to text format for LLM (full game history in algebraic notation)
-   - Get LLM's probability distribution over next move (via logits over legal moves)
-   - Convert position to Leela Zero input format
-   - Get Leela's probability distribution over next move (via policy network output)
-   - Calculate cross-entropy loss H(Leela || LLM) between distributions
-3. Average loss per game
-4. Average loss across all games for each model
-5. Correlate with published training/evaluation losses
-
-### 2.5 Technical Implementation
-
-- Python with PyTorch, Transformers (HuggingFace), python-chess
-- Leela Chess Zero via python-lczero or UCI interface
-
-### 2.6 Loss Metrics and Training Details
-
-#### Understanding Loss Metrics
-
-The loss metrics used in this study refer to **next-token prediction loss** (cross-entropy loss), which measures how well a language model predicts the next token in a sequence. Lower loss indicates better prediction accuracy.
-
-**Training Loss vs. Evaluation Loss:**
-
-- **Training loss**: Computed on the training dataset during model training. Can be prone to overfitting.
-- **Evaluation loss** (or validation loss): Computed on a held-out validation set not seen during training. More reliable indicator of generalization.
-
-For models trained on massive datasets approaching full coverage of available text (e.g., OLMo 2 trained on 4-6T tokens), the distinction between train and eval loss becomes less meaningful, as the model effectively sees most available data only once. In such cases, training loss approximates evaluation loss.
-
-#### OLMo 2 Training Regime
-
-The OLMo 2 models follow a two-stage training process:
-
-1. **Stage 1 (Pretraining)**: Models are trained on 4-6 trillion tokens from the OLMo-mix-1124 dataset, constituting 90-95% of the total training budget.
-2. **Stage 2 (Mid-training/Annealing)**: Additional training on 50-400 billion high-quality tokens from the Dolmino-Mix-1124 dataset. For 7B, 13B, and 32B models, multiple runs with different random seeds are trained and then averaged using model souping to produce the final checkpoint.
-
-Training stability improvements in OLMo 2 include RMSNorm, QK-Norm, rotary positional embeddings, and z-loss regularization. These architectural changes result in higher absolute training loss compared to earlier models due to the regularization terms, but improved training stability and downstream performance.
-
-#### Loss Number Sources
-
-Exact next-token prediction loss values for OLMo 2 models are available in:
-
-- **WandB training logs**:
-  - 1B model: N/A (?)
-  - 7B model: https://api.wandb.ai/links/ai2-llm/fjn0v0ec
-  - 13B model: https://api.wandb.ai/links/ai2-llm/ypmumwpc
-  - 32B model: https://www.comet.com/ai2/olmo-2-0325-32b/reports/olmo-2-0325-32b?shareable=WhT37Wy7jqttDoy6ysDBumQzf
-- **OLMo 2 paper** (Table 9): arXiv:2501.00656
-- **Model cards**: Available on HuggingFace under allenai organization
-
-Due to the difficulty of extracting precise numerical values from these sources during this analysis, loss values for OLMo 2 models are marked as TBD in our experiments, with full documentation of where these values can be obtained for future reference.
+Tinker estimate for this suite: ~$0.11 text + ~$0.65 chess ≈ **$0.76** (cap $50).
 
 ---
 
 ## Results
 
-### 3.1 Chess Loss by Model
+### Text BPB vs chess CE
 
-Table 1 shows the chess move prediction loss (cross-entropy against Leela Chess Zero) for all evaluated models. Lower values indicate better alignment with superhuman chess play.
+| Model | Params (B) | Text BPB | Chess CE | Top-1 Leela NLL |
+| ----- | ---------- | -------- | -------- | --------------- |
+| qwen3.5-4b | 4 | 0.701 | 5.130 | 3.921 |
+| qwen3-8b | 8 | 0.768 | 7.687 | 4.368 |
+| qwen3.5-9b | 9 | 0.663 | 4.891 | 4.617 |
+| gpt-oss-20b | 20 | 1.280 | 4.826 | 3.794 |
+| qwen3.6-27b | 27 | 0.616 | 5.752 | 4.493 |
+| nemotron-3-nano | 30 | 0.690 | 6.061 | 4.579 |
+| qwen3.6-35b-a3b | 35 | 0.637 | 4.727 | 4.491 |
+| gpt-oss-120b | 120 | 2.571 | 5.204 | 3.813 |
+| nemotron-3-super | 120 | 0.630 | 4.473 | 4.217 |
+| qwen3.5-397b | 397 | 0.602 | 4.480 | 3.483 |
+| nemotron-3-ultra | 550 | 0.602 | 4.352 | 4.575 |
+| deepseek-v3.1 | — | 0.623 | 3.876 | 4.026 |
+| kimi-k2.6 | — | 0.584 | 4.081 | 4.026 |
 
-| Model Name     | Parameters | Reference Loss | Chess Avg Loss | Num Games | Num Positions |
-| -------------- | ---------- | -------------- | -------------- | --------- | ------------- |
-| gpt2           | 124M       | 3.31           | 4.352          | 5         | 405           |
-| gpt-neo-1.3B   | 1.3B       | 2.85           | 4.151          | 5         | 405           |
-| pythia-1b      | 1.0B       | 2.74           | 4.118          | 5         | 405           |
-| pythia-1.4b    | 1.4B       | 2.64           | 4.256          | 5         | 405           |
-| olmo-2-1b      | 1.0B       | TODO           | 4.247          | 5         | 405           |
-| olmo-2-1b-mid  | 1.0B       | TODO           | 4.130          | 5         | 405           |
-| olmo-2-7b      | 7.0B       | TODO           | 4.233          | 5         | 405           |
-| olmo-2-7b-mid  | 7.0B       | TODO           | 4.196          | 5         | 405           |
-| olmo-2-13b     | 13.0B      | TODO           | 4.188          | 5         | 405           |
-| olmo-2-13b-mid | 13.0B      | TODO           | 4.043          | 5         | 405           |
-| olmo-2-32b     | 32.0B      | TODO           | 3.913          | 5         | 405           |
-| olmo-2-32b-mid | 32.0B      | TODO           | 3.882          | 5         | 405           |
+gpt-oss-20b / 120b show pathological text BPB (~1.28 / ~2.57) under this chat protocol — treated as outliers for correlation fits.
 
-*Reference Loss = next-token prediction loss from original papers/training logs (TODO for OLMo models)*
+![Text BPB vs chess CE](/assets/chess-check-20260710/text_bpb_vs_chess_ce.png)
 
-### 3.2 Key Observations
+**Core 11 (excl. gpt-oss):** Pearson \(r(\text{BPB}, \text{CE}) \approx 0.84\); Spearman \(\approx 0.74\). Linear fit: \(\text{CE} \approx -5.94 + 16.99 \cdot \text{BPB}\). All 13: \(r \approx 0.10\) (outliers dominate).
 
-**Model Size Effects:**
+Best chess CE: DeepSeek-V3.1 (3.876). Lowest text BPB: Kimi-K2.6 (0.584). Lowest top-1 Leela NLL: Qwen3.5-397B (3.483).
 
-- Among OLMo 2 models, chess loss decreases with model size: the 32B model achieves the lowest loss (3.882 for mid-checkpoint, 3.913 for final), while the 1B model shows the highest loss (4.247 for final, 4.130 for mid-checkpoint).
-- The OLMo 2 32B mid-checkpoint achieves the best overall chess performance across all evaluated models at 3.882.
+### Human / Deep Blue ladder
 
-**Checkpoint Comparison:**
+| Band | Mean played NLL | n moves |
+| ---- | --------------- | ------- |
+| DeepBlue1997 (G6 White) | 2.625 | 19 |
+| 1400–1800 | 2.845 | 56 |
+| 1800–2200 | 2.962 | 48 |
+| 2200–2600 | 2.412 | 423 |
+| 2600+ | 2.332 | 476 |
 
-- Mid-training checkpoints (~50% through stage 1) generally perform slightly better than or comparable to final checkpoints across all OLMo 2 model sizes. These differences may be due to noise.
+Mid bands are small-\(N\) and noisy. Strong humans (~2.33) and Deep Blue on this game (~2.62) sit well below every model's top-1 Leela NLL (~3.5–4.6). Empirical CE→top-1 fit on core models: \(\text{top1} \approx 3.69 + 0.113 \cdot \text{CE}\) (shallow; top-1 is a coarse bridge).
 
-**Cross-Model Comparisons:**
-
-- TODO: Pending extraction of reference losses for OLMo models from WandB logs and paper to enable full correlation analysis.
-- Smaller models (GPT-2 124M, Pythia 1B) show higher chess losses.
+![CE vs top-1 NLL with anchors](/assets/chess-check-20260710/ce_vs_top1_nll.png)
 
 ---
 
-## Discussion and Conclusion
+## Discussion
 
-*…in progress*
+Text BPB and chess CE **do** move together among ordinary instruct models in this suite — consistent with “better models are better at both,” not a clean dissociation. Two caveats cut against a strong Direct Approach reading:
+
+1. **Level, not just slope.** Even the best CE (~3.9) is far from matching Leela; top-1 NLL never reaches Deep Blue or 2600+ played-move NLL on this ladder.
+2. **Protocol fragility.** gpt-oss BPB blows up under chat/assistant scoring; without excluding them, the BPB–CE correlation collapses. Chess here is one game (19 White plies) — ranking noise is real.
+
+So: lower text loss tracks better chess *relative* ranking in this sample, but absolute chess competence under Leela remains weak, and the human bridge says models are not yet “playing like” strong humans on the played-move NLL metric.
+
+---
+
+## Limitations
+
+- One famous game for the LLM chess curve; contamination / memorization risk for well-known PGNs.
+- Human ladder is a convenience Lichess sample; mid Elo bands underpowered.
+- Leela BT3 `nodes=1` is a policy snapshot, not search Elo; castling SAN (`O-O`) occasionally missing from parsed VerboseMoveStats → epsilon fallback.
+- Instruct-only curve; no base-model pretrain loss comparison in this run.
 
 ---
 
@@ -184,39 +132,17 @@ Table 1 shows the chess move prediction loss (cross-entropy against Leela Chess 
 2. Ruoss, A., et al. (2024). Grandmaster-Level Chess Without Search. arXiv:2402.04494
 3. Leela Chess Zero Project. https://lczero.org/
 4. Hoffmann, J., et al. (2022). Training Compute-Optimal Large Language Models. arXiv:2203.15556
-5. Biderman, S., et al. (2023). Pythia: A Suite for Analyzing Large Language Models. arXiv:2304.01373
-6. Black, S., et al. (2021). GPT-Neo: Large Scale Autoregressive Language Modeling with Mesh-Tensorflow.
-7. Touvron, H., et al. (2023). Llama 2: Open Foundation and Fine-Tuned Chat Models. arXiv:2307.09288
-8. OLMo Team. (2025). 2 OLMo 2 Furious. arXiv:2501.00656. https://arxiv.org/abs/2501.00656
-9. OLMo 2 Model Collection. HuggingFace. https://huggingface.co/collections/allenai/olmo-2-674117b93ab84e98afc72edc
-10. OLMo 2 Training Logs. Weights & Biases.
-    - 1B: https://wandb.ai/ai2-llm/OLMo2-1B
-    - 7B: https://wandb.ai/ai2-llm/OLMo2-7B
-    - 13B: https://wandb.ai/ai2-llm/OLMo2-13B
+5. Thinking Machines Lab. Tinker. https://thinkingmachines.ai/
 
 ---
 
 ## Appendix
 
-### Potential Limitations
+Artifacts for run `20260710T231834Z`: `results/20260710T231834Z/` (merged CSV, human calibration, plots) and `logs/runs/20260710T231834Z/`. Methodology notes also in-repo at `docs/chess_methodology.md`.
 
-- Sample size of models tested limited by computational resources
-- Chess may not generalize to other domains
+### Future work
 
-### Suggestions for Future Work
-
-1. Analyze chess loss specifically on models similar to those from the Chinchilla paper (Hoffman 2022). The weights from that paper were never released though. See also [Epoch AI&#39;s replication](https://epoch.ai/publications/chinchilla-scaling-a-replication-attempt) (2024). For those models we'd have measured next-word loss numbers. We can use OLMO models for example. Another alternative would be Pythia models.
-   1. Basically, we need models where we have relevant loss numbers that we can compare. Perhaps, it'd also be nice to have number of train tokens and parameters. Then we could use the Chinchilla formula to also estimate loss. I am unsure if this adds any value. Perhaps it is also useful if the models are all the same except for number of train tokens and number of parameters.
-   2. olmo loss number are available on links from the header in [olmo 2 paper](https://arxiv.org/pdf/2501.00656)
-2. For the OLMO models: check to what extent it is legitimate to use train loss as an approximation for test loss. To do this, we will have to check if they were trained on more than one epoch. We can also check if there is a holdout validation set we can use to get these numbers.
-3. Use self-play games from Leela Zero to test on instead of actual games that might have been part of training data for lc0 (only trained on self-play?) or the LLMs
-4. Expand to more models and predict loss with Chinchilla scaling law
-5. Implement constrained generation for valid moves
-6. Add visualization scripts (loss correlation plots)
-7. Wandb or similar integration
-8. Anything useful here? https://arxiv.org/html/2410.11840v1
-
-- Test on multiple game engines (Stockfish, Komodo) and average their distributions. No engine is optimal. Leela Chess Zero may be biased towards one specific type of play, while another engine may be biased towards another.
-- Expand to other domains with verifiable ground truth (mathematical proofs, code correctness)
-- Use constrained generation or tool-use paradigm to ensure valid move outputs
-- Investigate whether including chess games in training data improves correlation
+- More games / Leela self-play positions; BT4 + search for reference variants.
+- Stockfish MultiPV as a second reference.
+- Fix O-O SAN mapping; enlarge human Elo samples.
+- Optional base-model curve with raw-continuation BPB for Direct Approach closer to pretrain loss.
