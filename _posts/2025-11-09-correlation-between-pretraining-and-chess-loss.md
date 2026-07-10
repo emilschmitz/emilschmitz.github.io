@@ -79,8 +79,8 @@ Tinker estimate for this suite: ~$0.11 text + ~$0.65 chess ≈ **$0.76** (cap $5
 | nemotron-3-super | 120 | 0.630 | 4.473 | 4.217 |
 | qwen3.5-397b | 397 | 0.602 | 4.480 | 3.483 |
 | nemotron-3-ultra | 550 | 0.602 | 4.352 | 4.575 |
-| deepseek-v3.1 | — | 0.623 | 3.876 | 4.026 |
-| kimi-k2.6 | — | 0.584 | 4.081 | 4.026 |
+| deepseek-v3.1 | 671 (37 act.) | 0.623 | 3.876 | 4.026 |
+| kimi-k2.6 | 1000 (32 act.) | 0.584 | 4.081 | 4.026 |
 
 gpt-oss-20b / 120b show pathological text BPB (~1.28 / ~2.57) under this chat protocol — treated as outliers for correlation fits.
 
