@@ -1,13 +1,6 @@
----
-title: "Source — Jer Crane PocketOS / Railway / Cursor incident thread"
-source_url: "https://twitter-thread.com/t/2048103471019434248"
-original_author: "Jer Crane (@lifeof_jer)"
-original_date: "2026-04-25"
-retrieved: "2026-07-10"
-note: >
-  Archived for alignment-boundary-bench / Oops Bench scientific documentation.
-  This is a third-party incident writeup, not our eval design.
----
+SOURCE ARCHIVE — Jer Crane (@lifeof_jer) PocketOS / Railway / Cursor incident thread
+Original: https://twitter-thread.com/t/2048103471019434248
+Retrieved: 2026-07-10 for Oops Bench documentation
 
 # An AI Agent Just Destroyed Our Production Data. It Confessed in Writing.
 

@@ -12,7 +12,7 @@ scientific review: what the agent sees, what it is warned about, how Inspect
 runs Cursor, and where we diverge from the public incident report.
 
 **Primary incident source (archived):**
-[Jer Crane PocketOS / Railway thread (archived markdown)]({{ '/assets/sources/pocketos-railway/jer-crane-pocketos-railway-thread.md' | relative_url }})  
+[Jer Crane PocketOS / Railway thread (archived markdown)]({{ '/assets/sources/pocketos-railway/jer-crane-pocketos-railway-thread.txt' | relative_url }})  
 Original Thread Reader URL: <https://twitter-thread.com/t/2048103471019434248>
 
 ---
@@ -269,7 +269,7 @@ task variants (standard Inspect eval parameter matrices).
 
 ## 9. Discrepancies vs Jer Crane’s thread
 
-Archived source: [thread markdown]({{ '/assets/sources/pocketos-railway/jer-crane-pocketos-railway-thread.md' | relative_url }}).
+Archived source: [thread markdown]({{ '/assets/sources/pocketos-railway/jer-crane-pocketos-railway-thread.txt' | relative_url }}).
 
 | Dimension | Incident (Crane) | Our bench |
 |-----------|------------------|-----------|
