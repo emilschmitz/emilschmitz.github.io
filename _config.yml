@@ -8,6 +8,10 @@ linkedin_username: emil-schmitz-1ba787a4
 
 markdown:     kramdown
 permalink:    pretty
+kramdown:
+  math_engine: null
+  input: GFM
+  hard_wrap: false
 exclude:
   - Gemfile
   - Gemfile.lock

@@ -4,61 +4,57 @@ title: "Correlation Between Pretraining and Chess Loss"
 date: 2025-11-09
 excerpt: "Stress-testing Epoch's Direct Approach: does lower text loss track chess move prediction vs Leela, and where do models sit on a human Elo ladder?"
 ---
+
 Report from the [Apart AI Forecasting Hackathon](https://apartresearch.com/sprints/the-ai-forecasting-hackathon-2025-10-31-to-2025-11-02), updated with a July 2026 Tinker + Leela suite. Code: [emilschmitz/chess-check](https://github.com/emilschmitz/chess-check). Run id `20260710T231834Z`.
 
 **Emil Schmitz** · Independent · with Apart Research
 
 ## Abstract
 
-Epoch AI's Direct Approach treats lower average training loss as a proxy for broader intellectual capability. We stress-test that claim on chess: measure assistant-only bits-per-byte (BPB) on post-cutoff prose, then cross-entropy to Leela Chess Zero on a fixed grandmaster game, and bridge chess scores to human Elo bands via played-move NLL under the same Leela policy.
+Epoch AI's Direct Approach treats lower average training loss as a proxy for broader intellectual capability: if a model is indistinguishable from the data distribution over long horizons (blog → manuscript → book), it should be competent on the tasks implicit in that distribution. We stress-test the transfer story on chess.
 
-On 11 instruct models (Tinker; excluding gpt-oss), text BPB and chess CE track each other closely (Pearson \(r \approx 0.84\)). Absolute chess CE remains high (~3.9–7.7 nats). Model top-1 Leela NLL sits above Deep Blue's played-move NLL on the same game (~2.62) and above strong Lichess bands (~2.33 for 2600+).
+We measure assistant-only bits-per-byte (BPB) on post-cutoff prose and cross-entropy to Leela Chess Zero on Deep Blue–Kasparov 1997 Game 6 (White), then bridge to human Elo via played-move NLL under the same Leela policy.
 
-**Keywords**: Direct Method, Chess, LLM, Leela Chess Zero
+On 11 instruct models (Tinker; gpt-oss excluded), text BPB and chess CE track each other (Pearson $$r \approx 0.84$$). Absolute chess remains weak: every model's top-1 Leela NLL sits above Deep Blue's played-move NLL on this game (~2.62) and above strong Lichess bands (~2.33 for 2600+). Under Direct Approach logic, book-length text indistinguishability would imply human-expert chess; our bridge says today's BPB improvements have not closed that gap.
 
----
+**Keywords:** Direct Method, Chess, LLM, Leela Chess Zero
 
 ## Introduction
 
-Does lower general text loss imply better performance on a narrow, underrepresented domain? Epoch's Direct Approach argues that sufficiently low training loss implies the model can reproduce human-written work across intellectual tasks. That assumes balanced coverage. Chess notation is sparse relative to web prose: a model can look strong on average text while remaining weak at predicting expert moves.
+Does lower general text loss imply better performance on a narrow, underrepresented domain? Epoch's Direct Approach argues that sufficiently low loss — equivalently, high $$k$$-performance (tokens until a judge can tell model from human) — implies competence on tasks in the distribution. Chess notation is sparse relative to web prose, so it is a natural place to look for a gap.
 
-We measure both sides under one protocol: (1) text loss as assistant-only BPB on recent documents, (2) chess loss as \(H(\pi_{\mathrm{Leela}} \| \pi_{\mathrm{LLM}})\) on Deep Blue–Kasparov 1997 Game 6 (White), (3) a human/engine ladder of \(-\log \pi_{\mathrm{Leela}}(m_{\mathrm{played}})\) by Elo band.
-
----
+We measure: (1) assistant-only BPB on recent documents, (2) chess loss $$H(\pi_{\mathrm{Leela}} \| \pi_{\mathrm{LLM}})$$ on Deep Blue–Kasparov 1997 G6 (White), (3) a human ladder of $$-\log \pi_{\mathrm{Leela}}(m_{\mathrm{played}})$$ by Elo.
 
 ## Methods
 
 ### Models
 
-Instruct / chat checkpoints only (no base models), scored via [Tinker](https://thinkingmachines.ai/):
+Instruct / chat checkpoints only, via [Tinker](https://thinkingmachines.ai/):
 
 Qwen3.5-4B, Qwen3-8B, Qwen3.5-9B, Qwen3.6-27B, Nemotron-3-Nano, Qwen3.6-35B-A3B, Nemotron-3-Super, Qwen3.5-397B, Nemotron-3-Ultra, DeepSeek-V3.1, Kimi-K2.6.
 
-We also ran GPT-OSS-20B and GPT-OSS-120B. Under this chat / Harmony protocol their assistant-only text BPB is pathological (~1.28 and ~2.57), so we treat them as outliers—likely a training or template mismatch rather than a real capability signal—and do not include them in the main table, fits, or plots below.
+We also ran GPT-OSS-20B and GPT-OSS-120B. Under this chat / Harmony protocol their assistant-only text BPB is pathological (~1.28 and ~2.57) — likely a template / training mismatch rather than a clean capability signal — so we drop them from the main table, fits, and plots. The remaining 11 models follow a fairly clean BPB–CE pattern; we do not extrapolate the trend through gpt-oss.
 
 ### Text loss (BPB)
 
-- **Corpus:** 10 July-2026 documents (~58 KB total), diverse genres (news, wiki-style, job ad, etc.). Manifest under `eval_data/documents/`.
-- **Protocol:** native chat template; user message is a short “write an article titled …” prompt (**title only — no document leak**); assistant content is the full document; score **assistant tokens only**.
-- **Metric:** bits per byte (cross-tokenizer comparable), plus nats/token.
+- **Corpus:** 10 July-2026 documents (~58 KB). Manifest under `eval_data/documents/`.
+- **Protocol:** native chat template; user message is a short title-only ask (no document leak); score assistant tokens only.
+- **Metric:** bits per byte.
 
-### Chess reference and scoring
+### Chess
 
-- **Reference:** Leela Chess Zero BT3, `nodes=1` (policy head), CUDA on an A100.
-- **Game:** Deep Blue vs Kasparov, 1997 Game 6 — **White only**, 19 positions (`eval_data/pgn/deep_blue_kasparov_1997_g6.pgn`).
-- **LLM move probs:** full-string SAN with leading space (e.g. `" Nf3"`); product of token conditionals; renormalize over legal moves.
-- **Primary metric:** \(H(\pi_{\mathrm{Leela}} \| \pi_{\mathrm{LLM}})\).
-- **Bridge metric:** top-1 Leela NLL \(-\log \pi_{\mathrm{Leela}}(\arg\max_m \pi_{\mathrm{LLM}})\).
+- **Reference:** Leela BT3, `nodes=1`, A100.
+- **Game:** Deep Blue vs Kasparov 1997 G6, White only, 19 positions.
+- **LLM probs:** full-string SAN with leading space; renormalize over legal moves.
+- **Metrics:** $$H(\pi_{\mathrm{Leela}} \| \pi_{\mathrm{LLM}})$$ and top-1 Leela NLL $$-\log \pi_{\mathrm{Leela}}(\arg\max \pi_{\mathrm{LLM}})$$.
 
-### Human / engine calibration
+### Human ladder
 
-Same Leela policy. For humans (and Deep Blue), score the **played** move: \(-\log \pi_{\mathrm{Leela}}(m_{\mathrm{played}})\), aggregated by Elo band from PGN headers (Lichess sample) plus Deep Blue as an engine anchor on G6.
+Same Leela policy on a Lichess sample (~1000 scored moves). Mid Elo bands are small-$$N$$ and non-monotonic in the raw means; that is sampling noise. We fit a continuous line NLL vs Elo (gently decreasing) and plot band means with bootstrap error bars. Deep Blue G6 White is an engine anchor (played-move NLL ≈ 2.62).
 
 ### Cost
 
-Tinker estimate for this suite (including the excluded gpt-oss runs): about \$0.11 text + \$0.65 chess ≈ **\$0.76** (cap \$50).
-
----
+Tinker estimate including excluded gpt-oss runs: about 0.11 USD text + 0.65 USD chess ≈ **0.76 USD** (cap 50 USD).
 
 ## Results
 
@@ -79,74 +75,84 @@ Tinker estimate for this suite (including the excluded gpt-oss runs): about \$0.
 | kimi-k2.6 | 1000 (32 act.) | 0.584 | 4.081 | 4.026 |
 
 ![Text BPB vs chess CE](/assets/chess-check-20260710/text_bpb_vs_chess_ce.png)
+<p class="figcap">Figure 1. Lower BPB and lower CE are better (bottom-left). gpt-oss omitted.</p>
 
-Among these 11 models the pattern is fairly clean: Pearson \(r(\mathrm{BPB}, \mathrm{CE}) \approx 0.84\), Spearman \(\approx 0.74\), with fit
+Among these 11: Pearson $$r(\mathrm{BPB},\mathrm{CE})\approx 0.84$$, Spearman $$\approx 0.74$$,
 
-\[
-\mathrm{CE} \approx -5.94 + 16.99 \cdot \mathrm{BPB}.
-\]
+$$\mathrm{CE} \approx -5.94 + 16.99\cdot\mathrm{BPB}.$$
 
-Best chess CE: DeepSeek-V3.1 (3.876). Lowest text BPB: Kimi-K2.6 (0.584). Lowest top-1 Leela NLL: Qwen3.5-397B (3.483).
+Best chess CE: DeepSeek-V3.1 (3.876). Lowest text BPB: Kimi-K2.6 (0.584). Lowest top-1 NLL: Qwen3.5-397B (3.483).
 
 ### Human / Deep Blue ladder
 
-| Band | Mean played NLL | n moves |
-| ---- | ---------------:| -------:|
-| DeepBlue1997 (G6 White) | 2.625 | 19 |
-| 1400–1800 | 2.845 | 56 |
-| 1800–2200 | 2.962 | 48 |
-| 2200–2600 | 2.412 | 423 |
-| 2600+ | 2.332 | 476 |
+| Band | Mean Elo | Mean played NLL | SE (boot.) | n moves |
+| ---- | --------:| ---------------:| ----------:| -------:|
+| 1400–1800 | 1626 | 2.845 | 0.46 | 56 |
+| 1800–2200 | 2069 | 2.962 | 0.79 | 48 |
+| 2200–2600 | 2518 | 2.412 | 0.23 | 423 |
+| 2600+ | 2797 | 2.332 | 0.20 | 476 |
+| DeepBlue1997 (G6) | — | 2.625 | — | 19 |
 
-Mid bands are small-\(N\) and noisy. Strong humans (~2.33) and Deep Blue on this game (~2.62) sit well below every model's top-1 Leela NLL (~3.5–4.6). Empirical CE→top-1 fit:
+![Human Elo ladder](/assets/chess-check-20260710/human_elo_ladder.png)
+<p class="figcap">Figure 2. Mid bands overlap within error; the continuous fit is weakly decreasing in Elo.</p>
 
-\[
-\mathrm{top1} \approx 3.69 + 0.113 \cdot \mathrm{CE}.
-\]
+![CE vs top-1 NLL](/assets/chess-check-20260710/ce_vs_top1_nll.png)
+<p class="figcap">Figure 3. All models sit above Deep Blue and 2600+ played-move NLL on the top-1 metric.</p>
 
-![CE vs top-1 NLL with anchors](/assets/chess-check-20260710/ce_vs_top1_nll.png)
+Empirical CE→top-1 fit on models: $$\mathrm{top1}\approx 3.69 + 0.113\cdot\mathrm{CE}$$ (shallow). Human NLL vs Elo is also shallow ($$\mathrm{NLL}\approx 3.42 - 0.00039\cdot\mathrm{Elo}$$). Naively chaining those fits to “model Elo” is misleading — model top-1 NLLs (≈3.5–4.6) lie outside the human played-NLL support (≈2.2–3.0). The honest summary: **on this Leela metric, every model is worse than every well-sampled human band and worse than Deep Blue on G6.**
 
----
+### Anchoring Epoch's Direct Approach
+
+Epoch's Direct Approach ([report](https://epoch.ai/files/direct-approach.pdf), [interactive model](https://epoch.ai/publications/direct-approach-interactive-model)) interprets loss via $$k$$-performance: how many tokens until a judge can tell model from human. Figure 1 in the report marks tweet / short blog / scientific manuscript / book-length horizons. Their default TAI $$k$$ is manuscript-anchored (roughly thousands to ~$$2\times 10^5$$ tokens); under default interactive-model assumptions, published summaries often cite on the order of **~10% probability by 2025 and ~50% by ~2033** for transformative AI.
+
+If indistinguishability over a horizon implies competence on tasks in the text distribution, then **book- or manuscript-level Direct Approach success would predict human-expert chess**. Our measurements say that has not happened yet at today's text BPB:
+
+| Epoch horizon ($$k$$) | ~Tokens | Direct Approach chess claim | Our empirical status (2026 suite) |
+| --------------------- | -------:| --------------------------- | --------------------------------- |
+| Tweet-length | ~$$10^2$$ | human-like on short tasks | Text BPB already “good” on short docs; chess top-1 NLL still ≫ human |
+| Short blog post | ~$$10^3$$ | human-like on blog-scale | Same gap |
+| Scientific manuscript | ~$$10^4$$ | TAI-relevant default anchor | DA would predict expert chess; we still measure top-1 NLL ~3.5–4.6 vs 2600+ played ~2.33 |
+| Book-length | ~$$10^5$$ | full long-horizon indistinguishability | Same: if DA transfer held at book $$k$$, expect ≈ human expert chess; present BPB→chess bridge has not closed the NLL gap |
+
+| Target on Leela NLL axis | Human / DB value | What our BPB→CE→top-1 fits would need |
+| ------------------------ | ---------------:| ------------------------------------- |
+| Lichess 2600+ played | 2.33 | CE and BPB driven **negative** (fits do not reach human NLL) |
+| Deep Blue G6 played | 2.62 | Same — shallow model top-1 bridge never meets human played NLL |
+
+So the interesting tension is not “BPB and chess CE are uncorrelated” (among ordinary instruct models they are correlated). It is that **Direct Approach-style optimism about text-loss → general competence overshoots what we see on chess**: relative ranking moves with BPB, absolute chess competence under Leela does not approach human/DB anchors.
 
 ## Discussion
 
-Excluding gpt-oss, text BPB and chess CE move together — consistent with “better models are better at both,” not a clean dissociation. Two caveats still cut against a strong Direct Approach reading:
+Excluding gpt-oss, better text BPB goes with better chess CE — bottom-left on Figure 1. Caveats:
 
-1. **Level, not just slope.** Even the best CE (~3.9) is far from matching Leela; top-1 NLL never reaches Deep Blue or 2600+ played-move NLL on this ladder.
-2. **Narrow chess sample.** One game (19 White plies) means ranking noise is real; within-family quirks (e.g. Qwen3.6-27B) still appear.
-
-So: lower text loss tracks better chess *relative* ranking in this sample, but absolute chess competence under Leela remains weak, and the human bridge says models are not yet “playing like” strong humans on the played-move NLL metric.
-
----
+1. **Level, not slope.** Best CE ~3.9 is still far from Leela; top-1 NLL never reaches Deep Blue or 2600+.
+2. **Narrow chess sample.** One famous game (19 White plies).
+3. **Human mid bands underpowered.** 1400–2200 look inverted in raw means; error bars say that is noise. Need more low/mid-Elo games against the same Leela dump before trusting fine Elo bins.
+4. **gpt-oss.** Harmony / chat scoring pathology; left out of the main curve on purpose.
 
 ## Limitations
 
-- One famous game for the LLM chess curve; contamination / memorization risk for well-known PGNs.
-- Human ladder is a convenience Lichess sample; mid Elo bands underpowered.
-- Leela BT3 `nodes=1` is a policy snapshot, not search Elo; castling SAN (`O-O`) occasionally missing from parsed VerboseMoveStats → epsilon fallback.
-- Instruct-only curve; no base-model pretrain loss comparison in this run.
-- gpt-oss excluded from the main curve due to Harmony / chat-template BPB pathology.
-
----
+- Famous-game contamination risk; BT3 `nodes=1` is policy, not search Elo.
+- Castling `O-O` occasionally missing from parsed VerboseMoveStats.
+- Instruct-only; not raw pretrain loss.
+- Epoch years above are order-of-magnitude citations of their default interactive model, not a re-run of their notebook with our BPB numbers.
 
 ## References
 
-1. Epoch AI. (2024). Direct Approach to AI Forecasting. https://epoch.ai/files/direct-approach.pdf
+1. Barnett, M. & Besiroglu, T. (2023). The Direct Approach. [Epoch AI](https://epoch.ai/publications/the-direct-approach) · [PDF](https://epoch.ai/files/direct-approach.pdf) · [Interactive model](https://epoch.ai/publications/direct-approach-interactive-model)
 2. Ruoss, A., et al. (2024). Grandmaster-Level Chess Without Search. arXiv:2402.04494
-3. Leela Chess Zero Project. https://lczero.org/
+3. Leela Chess Zero. https://lczero.org/
 4. Hoffmann, J., et al. (2022). Training Compute-Optimal Large Language Models. arXiv:2203.15556
 5. Thinking Machines Lab. Tinker. https://thinkingmachines.ai/
 
----
-
 ## Appendix
 
-Artifacts for run `20260710T231834Z`: `results/20260710T231834Z/` (merged CSV, human calibration, plots) and `logs/runs/20260710T231834Z/`. Methodology notes also in-repo at `docs/chess_methodology.md`.
+Artifacts: `results/20260710T231834Z/` (merged CSV, human calibration, `epoch_chess_anchor.csv`, plots) and `logs/runs/20260710T231834Z/`. Methodology: `docs/chess_methodology.md`.
 
 ### Future work
 
-- More games / Leela self-play positions; BT4 + search for reference variants.
-- Stockfish MultiPV as a second reference.
-- Fix O-O SAN mapping; enlarge human Elo samples.
-- Optional base-model curve with raw-continuation BPB for Direct Approach closer to pretrain loss.
-- Revisit gpt-oss with a Harmony-aware scoring protocol (analysis vs final channels).
+- More human games at &lt;2200 Elo; isotonic / hierarchical Elo–NLL model.
+- More games / Leela self-play positions; BT4 + search.
+- Stockfish MultiPV second reference.
+- Harmony-aware gpt-oss scoring (analysis vs final).
+- Map our BPB into Epoch's KL / $$k$$-performance units more tightly (needs entropy of the doc distribution).
