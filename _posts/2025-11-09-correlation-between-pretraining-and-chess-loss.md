@@ -15,7 +15,7 @@ Epoch AI's Direct Approach treats lower average training loss as a proxy for bro
 
 We measure assistant-only bits-per-byte (BPB) on post-cutoff prose and cross-entropy to Leela Chess Zero on Deep Blue–Kasparov 1997 Game 6 (White), then bridge to human Elo via played-move NLL under the same Leela policy.
 
-On 11 instruct models (Tinker; gpt-oss excluded), text BPB and chess CE track each other (Pearson $$r \approx 0.84$$). Absolute chess remains weak: every model's top-1 Leela NLL sits above Deep Blue's played-move NLL on this game (~2.62) and above strong Lichess bands (~2.33 for 2600+). Under Direct Approach logic, book-length text indistinguishability would imply human-expert chess; our bridge says today's BPB improvements have not closed that gap.
+On 11 instruct models (Tinker; gpt-oss excluded), text BPB and chess CE track each other (Pearson $$r \approx 0.84$$). Absolute chess remains weak: every model's top-1 Leela NLL sits above Deep Blue's played-move NLL on this game (~2.62) and above strong Lichess blitz bands (~2.14 for 2600+). Under Direct Approach logic, book-length text indistinguishability would imply human-expert chess; our bridge says today's BPB improvements have not closed that gap.
 
 **Keywords:** Direct Method, Chess, LLM, Leela Chess Zero
 
@@ -50,7 +50,7 @@ We also ran GPT-OSS-20B and GPT-OSS-120B. Under this chat / Harmony protocol the
 
 ### Human ladder
 
-Same Leela policy on a Lichess sample (~1000 scored moves). Mid Elo bands are small-$$N$$ and non-monotonic in the raw means; that is sampling noise. We fit a continuous line NLL vs Elo (gently decreasing) with a bootstrap **95% confidence band**, and plot band means with bootstrap error bars. Deep Blue G6 White is an engine anchor (played-move NLL ≈ 2.62).
+Same Leela policy (BT3, `nodes=1`) on a **new Lichess rated-blitz** sample (42 games, 3013 scored moves), balanced to ~500+ moves per Elo band and restricted to blitz so games are comparable. With enough samples the band means are monotonic. We fit NLL vs Elo with a bootstrap **95% confidence band**, and plot band means with bootstrap error bars. Deep Blue G6 White is an engine anchor (played-move NLL ≈ 2.62).
 
 ### Cost
 
@@ -89,14 +89,15 @@ Best chess CE: DeepSeek-V3.1 (3.876). Lowest text BPB: Kimi-K2.6 (0.584). Lowest
 
 | Band | Mean Elo | Mean played NLL | SE (boot.) | n moves |
 | ---- | --------:| ---------------:| ----------:| -------:|
-| 1400–1800 | 1626 | 2.845 | 0.46 | 56 |
-| 1800–2200 | 2069 | 2.962 | 0.79 | 48 |
-| 2200–2600 | 2518 | 2.412 | 0.23 | 423 |
-| 2600+ | 2797 | 2.332 | 0.20 | 476 |
+| &lt;1400 | 1180 | 3.002 | 0.17 | 553 |
+| 1400–1800 | 1680 | 2.969 | 0.18 | 569 |
+| 1800–2200 | 1932 | 2.472 | 0.15 | 669 |
+| 2200–2600 | 2348 | 2.199 | 0.15 | 703 |
+| 2600+ | 2761 | 2.135 | 0.17 | 519 |
 | DeepBlue1997 (G6) | — | 2.625 | — | 19 |
 
 ![Human Elo ladder](/assets/chess-check-20260710/human_elo_ladder.png)
-<p class="figcap">Figure 2. Mid bands overlap within error; continuous fit with 95% CI is weakly decreasing in Elo.</p>
+<p class="figcap">Figure 2. Balanced blitz sample; band means decrease with Elo. Shaded band: bootstrap 95% CI.</p>
 
 ![CE vs top-1 NLL](/assets/chess-check-20260710/ce_vs_top1_nll.png)
 <p class="figcap">Figure 3. All models sit above Deep Blue and 2600+ played-move NLL. Shaded band: bootstrap 95% CI on the CE→top-1 fit.</p>
@@ -113,7 +114,7 @@ If indistinguishability over a horizon implies competence on tasks in the text d
 | --------------------- | -------:| --------------------------- | --------------------------------- |
 | Tweet-length | ~$$10^2$$ | human-like on short tasks | Text BPB already “good” on short docs; chess top-1 NLL still ≫ human |
 | Short blog post | ~$$10^3$$ | human-like on blog-scale | Same gap |
-| Scientific manuscript | ~$$10^4$$ | TAI-relevant default anchor | DA would predict expert chess; we still measure top-1 NLL ~3.5–4.6 vs 2600+ played ~2.33 |
+| Scientific manuscript | ~$$10^4$$ | TAI-relevant default anchor | DA would predict expert chess; we still measure top-1 NLL ~3.5–4.6 vs 2600+ played ~2.14 |
 | Book-length | ~$$10^5$$ | full long-horizon indistinguishability | Same: if DA transfer held at book $$k$$, expect ≈ human expert chess; present BPB→chess bridge has not closed the NLL gap |
 
 | Target on Leela NLL axis | Human / DB value | What our BPB→CE→top-1 fits would need |
@@ -129,7 +130,7 @@ Excluding gpt-oss, better text BPB goes with better chess CE — bottom-left on 
 
 1. **Level, not slope.** Best CE ~3.9 is still far from Leela; top-1 NLL never reaches Deep Blue or 2600+.
 2. **Narrow chess sample.** One famous game (19 White plies).
-3. **Human mid bands underpowered.** 1400–2200 look inverted in raw means; error bars say that is noise. Need more low/mid-Elo games against the same Leela dump before trusting fine Elo bins.
+3. **Human ladder is blitz-only** in the expanded sample; classical/rapid may differ. Still one Leela net (`nodes=1`).
 4. **gpt-oss.** Harmony / chat scoring pathology; left out of the main curve on purpose.
 
 ## Limitations
