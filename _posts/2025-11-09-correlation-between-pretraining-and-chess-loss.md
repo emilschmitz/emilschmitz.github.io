@@ -50,7 +50,7 @@ We also ran GPT-OSS-20B and GPT-OSS-120B. Under this chat / Harmony protocol the
 
 ### Human ladder
 
-Same Leela policy (BT3, `nodes=1`) on a **new Lichess rated-blitz** sample (42 games, 3013 scored moves), balanced to ~500+ moves per Elo band and restricted to blitz so games are comparable. With enough samples the band means are monotonic. We fit NLL vs Elo with a bootstrap **95% confidence band**, and plot band means with bootstrap error bars. Deep Blue G6 White is an engine anchor (played-move NLL ≈ 2.62).
+Same Leela policy (BT3, `nodes=1`) on a **Lichess rated-blitz** sample (42 games, 3013 moves), each move tagged with the player's **raw Elo**. The estimate is a continuous OLS of played-move NLL on Elo over all moves, with a bootstrap **95% CI** on the fit. Elo bands appear only as a post-hoc summary table — they are not what we fit. Deep Blue G6 White is an engine anchor (played-move NLL ≈ 2.62 ≈ Elo ~1990 on this fit; that Elo is a Leela-NLL projection, not tournament strength).
 
 ### Cost
 
@@ -85,24 +85,40 @@ $$\mathrm{CE} \approx -5.94 + 16.99\cdot\mathrm{BPB}$$
 
 Best chess CE: DeepSeek-V3.1 (3.876). Lowest text BPB: Kimi-K2.6 (0.584). Lowest top-1 NLL: Qwen3.5-397B (3.483).
 
-### Human / Deep Blue ladder
+### Human / Deep Blue calibration (continuous Elo)
 
-| Band | Mean Elo | Mean played NLL | SE (boot.) | n moves |
-| ---- | --------:| ---------------:| ----------:| -------:|
+Primary fit on all 3013 moves (raw Elo, not bands):
+
+$$\mathrm{NLL} \approx 3.806 - 0.000637\cdot\mathrm{Elo}$$
+
+(bootstrap 95% CI on slope: $$[-0.00092,\ -0.00038]$$; Spearman $$\rho\approx -0.22$$). Correlation is weak but the slope CI excludes zero — higher Elo → slightly lower played-move NLL under Leela.
+
+| Elo (ref.) | Fit NLL |
+| ----------:| -------:|
+| 1200 | 3.04 |
+| 1600 | 2.79 |
+| 2000 | 2.53 |
+| 2400 | 2.28 |
+| 2800 | 2.02 |
+| Deep Blue G6 (played NLL 2.62) | ≈ Elo 1986 on this axis |
+
+Post-hoc band means (summary only):
+
+| Band | Mean Elo | Mean played NLL | SE | n moves |
+| ---- | --------:| ---------------:| --:| -------:|
 | &lt;1400 | 1180 | 3.002 | 0.17 | 553 |
 | 1400–1800 | 1680 | 2.969 | 0.18 | 569 |
 | 1800–2200 | 1932 | 2.472 | 0.15 | 669 |
 | 2200–2600 | 2348 | 2.199 | 0.15 | 703 |
 | 2600+ | 2761 | 2.135 | 0.17 | 519 |
-| DeepBlue1997 (G6) | — | 2.625 | — | 19 |
 
 ![Human Elo ladder](/assets/chess-check-20260710/human_elo_ladder.png)
-<p class="figcap">Figure 2. Balanced blitz sample; band means decrease with Elo. Shaded band: bootstrap 95% CI.</p>
+<p class="figcap">Figure 2. Continuous OLS on every move’s raw Elo (shaded 95% CI). Bands are not used in the fit.</p>
 
 ![CE vs top-1 NLL](/assets/chess-check-20260710/ce_vs_top1_nll.png)
-<p class="figcap">Figure 3. All models sit above Deep Blue and 2600+ played-move NLL. Shaded band: bootstrap 95% CI on the CE→top-1 fit.</p>
+<p class="figcap">Figure 3. Model CE vs top-1 NLL with <em>Elo</em> reference lines from the continuous human fit (right axis). Deep Blue marked by implied Elo, not a band.</p>
 
-Empirical CE→top-1 fit on models: $$\mathrm{top1}\approx 3.69 + 0.113\cdot\mathrm{CE}$$ (shallow). Human NLL vs Elo is also shallow ($$\mathrm{NLL}\approx 3.42 - 0.00039\cdot\mathrm{Elo}$$). Naively chaining those fits to “model Elo” is misleading — model top-1 NLLs (≈3.5–4.6) lie outside the human played-NLL support (≈2.2–3.0). The honest summary: **on this Leela metric, every model is worse than every well-sampled human band and worse than Deep Blue on G6.**
+Empirical CE→top-1 fit on models: $$\mathrm{top1}\approx 3.69 + 0.113\cdot\mathrm{CE}$$ (shallow). Model top-1 NLLs (≈3.5–4.6) sit above the human Elo reference lines on Figure 3 (human fit NLL ≈2.0–3.0 over Elo 1200–2800). **On this Leela metric, every model is worse than typical human blitz play and worse than Deep Blue on G6.**
 
 ### Anchoring Epoch's Direct Approach
 
