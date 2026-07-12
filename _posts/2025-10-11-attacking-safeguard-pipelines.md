@@ -2,6 +2,7 @@
 layout: post
 title: "Attacking Safeguard Pipelines"
 date: 2025-10-11
+published: false
 excerpt: "An exploration of vulnerabilities in AI safety mechanisms and safeguard pipelines."
 ---
 
