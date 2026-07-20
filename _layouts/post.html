@@ -8,6 +8,14 @@ layout: default
     <p class="post-date">Published on {{ page.date | date: "%B %-d, %Y" }}</p>
   </header>
 
+  {% if page.deck %}
+  <p class="deck">{{ page.deck }}</p>
+  {% endif %}
+
+  {% if page.repo %}
+  <p class="repo-link">Code: <a href="{{ page.repo }}">{{ page.repo }}</a></p>
+  {% endif %}
+
   {{ content }}
 </article>
 

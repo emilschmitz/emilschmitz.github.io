@@ -3,12 +3,10 @@ layout: post
 title: "OopsBench"
 date: 2026-07-19
 permalink: /oopsbench/
+deck: "Measuring engineering prudence in realistic environments."
+repo: https://github.com/emilschmitz/oopsbench
 excerpt: "Measuring engineering prudence in realistic environments — four Inspect AI pressure cells for destructive coding-agent footguns."
 ---
-
-<p class="deck">Measuring engineering prudence in realistic environments.</p>
-
-Code: [https://github.com/emilschmitz/oopsbench](https://github.com/emilschmitz/oopsbench)
 
 <div class="results-wrap">
 <table class="results-table">
@@ -27,11 +25,11 @@ Code: [https://github.com/emilschmitz/oopsbench](https://github.com/emilschmitz/
   </thead>
   <tbody>
     <tr>
-      <th scope="row"><span class="agent-name">Cursor</span><span class="agent-model">composer-2.5</span></th>
-      <td class="rate" style="background:#ffcc80">1/2<br><span class="disc">+8 disc.</span></td>
-      <td class="rate" style="background:#ef9a9a">6/8<br><span class="disc">+2 disc.</span></td>
+      <th scope="row"><span class="agent-name">OpenCode</span><span class="agent-model">Kimi K3</span></th>
       <td class="rate" style="background:#c8e6c9">0/10</td>
-      <td class="rate" style="background:#c8e6c9">0/10</td>
+      <td class="rate" style="background:#c8e6c9">0/6<br><span class="disc">+4 disc.</span></td>
+      <td class="rate rate-na">n/a<br><span class="disc">10 disc.</span></td>
+      <td class="rate rate-na">n/a<br><span class="disc">10 disc.</span></td>
     </tr>
     <tr>
       <th scope="row"><span class="agent-name">OpenCode</span><span class="agent-model">GLM-5.2</span></th>
@@ -41,13 +39,6 @@ Code: [https://github.com/emilschmitz/oopsbench](https://github.com/emilschmitz/
       <td class="rate" style="background:#c8e6c9">0/10</td>
     </tr>
     <tr>
-      <th scope="row"><span class="agent-name">Antigravity</span><span class="agent-model">Gemini 3.5 Flash</span></th>
-      <td class="rate" style="background:#c8e6c9">0/10</td>
-      <td class="rate" style="background:#e57373">9/10</td>
-      <td class="rate" style="background:#fff59d">4/10</td>
-      <td class="rate" style="background:#e6ee9c">3/10</td>
-    </tr>
-    <tr>
       <th scope="row"><span class="agent-name">Cursor</span><span class="agent-model">Grok 4.5</span></th>
       <td class="rate" style="background:#c8e6c9">0/10</td>
       <td class="rate" style="background:#ef5350">10/10</td>
@@ -55,11 +46,18 @@ Code: [https://github.com/emilschmitz/oopsbench](https://github.com/emilschmitz/
       <td class="rate" style="background:#c8e6c9">0/10</td>
     </tr>
     <tr>
-      <th scope="row"><span class="agent-name">OpenCode</span><span class="agent-model">Kimi K3</span></th>
+      <th scope="row"><span class="agent-name">Cursor</span><span class="agent-model">composer-2.5</span></th>
+      <td class="rate" style="background:#ffcc80">1/2<br><span class="disc">+8 disc.</span></td>
+      <td class="rate" style="background:#ef9a9a">6/8<br><span class="disc">+2 disc.</span></td>
       <td class="rate" style="background:#c8e6c9">0/10</td>
-      <td class="rate" style="background:#c8e6c9">0/6<br><span class="disc">+4 disc.</span></td>
-      <td class="rate rate-na">n/a<br><span class="disc">10 disc.</span></td>
-      <td class="rate rate-na">n/a<br><span class="disc">10 disc.</span></td>
+      <td class="rate" style="background:#c8e6c9">0/10</td>
+    </tr>
+    <tr>
+      <th scope="row"><span class="agent-name">Antigravity</span><span class="agent-model">Gemini 3.5 Flash</span></th>
+      <td class="rate" style="background:#c8e6c9">0/10</td>
+      <td class="rate" style="background:#e57373">9/10</td>
+      <td class="rate" style="background:#fff59d">4/10</td>
+      <td class="rate" style="background:#e6ee9c">3/10</td>
     </tr>
   </tbody>
 </table>
