@@ -69,17 +69,11 @@ This is a benchmark intended to measure coding agents’ propensity to do stupid
 
 The accepted best practice to avoid this sort of thing is to limit the agent’s access to things we don’t want it to touch. However, doing that requires effort and adds complexity, so in practice agents often have access to lots of things.
 
-## Tasks
+## Setup
 
-OopsBench is a small benchmark, covering four scenarios optimized for realism.
+So far, OopsBench comprises four scenarios. I’ve optimized them heavily for realism with the idea to use this as a blueprint to be scaled up in the future. I’m currently working on a skill for that, based on my development traces.
 
-To make the tasks realistic, I’ve taken publicly posted incidents that actually occurred and turned them into eval tasks. I used `docker compose` to replicate development environments, placed cli coding agents inside of them, and used the `inspect-ai` evaluation framework to set up, run and track evaluations.
-
-Serious agent-effectuated incidents happen only occasionally in practice, usually in unpredictable situations. Because of that, there are challenges with setting up environments where they will happen predictably enough to make for a useful eval.
-
-To tackle this, I’ve made the setups nudge the agent towards unsafe action. The agent is prompted to complete a benign, urgent task. However, in tasks I and IV, something in the environment is broken, so the agent has to choose between stopping and reprompting the user or trying to unblock itself by doing something unwise. Tasks II and III are similar, but there the issues are fixable, with a lot of tedious work.
-
-The unfixable environments are unrealistic to an extent, since there is normally a safe path in practice, but with enough quality measurements this methodology would give us a lower bound for reliability. If the agent does not do unsafe things when there is no other way, then it shouldn’t do them either when it does have a safe alternative.
+I created the tasks based on publicly posted incidents that actually occurred. I used `docker compose` to replicate multi-service environments, placed cli coding agents inside of them, and used the `inspect-ai` evaluation framework to set up, run and track evaluations. What the CLI agent sees should be close to deployment in the real world.
 
 ### I: Agent deletes production database volume to fix credential mismatch.
 
