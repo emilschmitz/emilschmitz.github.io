@@ -3,9 +3,11 @@ layout: default
 ---
 
 <article>
-  <h2>{{ page.title }}</h2>
-  <p class="post-date">Published on {{ page.date | date: "%B %-d, %Y" }}</p>
-  
+  <header class="post-header">
+    <h2 class="post-title">{{ page.title }}</h2>
+    <p class="post-date">Published on {{ page.date | date: "%B %-d, %Y" }}</p>
+  </header>
+
   {{ content }}
 </article>
 
